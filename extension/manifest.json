@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "douyin-clipper 抖音剪藏",
+  "version": "0.1.0",
+  "description": "一键把当前抖音视频剪藏到 Obsidian:视频文件 + faster-whisper AI 文稿,与 Web Clipper 笔记同构",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["https://www.douyin.com/*"],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { width: 320px; margin: 0; padding: 14px;
+           font: 13px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+           color: #222; }
+    h1 { font-size: 15px; margin: 0 0 10px; }
+    button { width: 100%; padding: 10px; border: 0; border-radius: 8px;
+             background: #fe2c55; color: #fff; font-size: 14px; font-weight: 600;
+             cursor: pointer; }
+    button:hover { background: #e51e47; }
+    button:disabled { background: #999; cursor: wait; }
+    #status { margin-top: 10px; font-size: 12px; white-space: pre-wrap;
+              word-break: break-all; }
+    .ok { color: #0a7d32; }
+    .err { color: #c62828; }
+    label { display: block; margin-top: 12px; font-size: 11px; color: #666; }
+    input { width: 100%; box-sizing: border-box; padding: 5px 7px; margin-top: 3px;
+            border: 1px solid #ddd; border-radius: 6px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>🎬 抖音剪藏</h1>
+  <button id="clip">剪藏此视频到 Obsidian</button>
+  <button id="start-assistant" style="display:none; background:#0a7d32; margin-top:8px;">一键启动本机助手</button>
+  <div id="status"></div>
+  <label>本机助手令牌(X-Dyclip-Token)
+    <input id="token" placeholder="config.toml 里 token 字段的值">
+  </label>
+  <script src="extractor.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

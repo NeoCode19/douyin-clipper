@@ -1,0 +1,19 @@
+# 复制本文件为 config.toml 并改成你自己的路径
+
+# Obsidian 仓库根目录(绝对路径)
+vault_path = "C:/Users/you/Documents/ObsidianVault"
+
+# 剪藏笔记保存的子文件夹(相对 vault_path)
+notes_dir = "📥收件箱/剪藏-抖音"
+
+# 视频文件归档的子文件夹(相对 vault_path)
+assets_dir = "附件/抖音"
+
+# whisper 模型: tiny / base / small(推荐) / medium
+model_size = "small"
+
+# 视频时长上限(秒),防止误点超长视频烧时间
+max_video_sec = 600
+
+# 视频/音频临时目录(相对本项目根目录)
+downloads_dir = "downloads"

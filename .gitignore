@@ -1,0 +1,9 @@
+# 本地私密配置(各人自己的仓库路径)
+config.toml
+
+# 中间产物
+downloads/
+*.mp4
+
+__pycache__/
+*.pyc
