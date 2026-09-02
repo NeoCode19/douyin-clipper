@@ -37,6 +37,8 @@ def load() -> dict:
         "token": str(cfg.get("token", "")),
         # 超过该时长(秒)的视频直接拒收,防止误点长视频烧掉大量时间
         "max_video_sec": int(cfg.get("max_video_sec", 600)),
+        # 剪完后自动在 Obsidian 打开新笔记
+        "open_note": bool(cfg.get("open_note", True)),
         "downloads_dir": downloads,
     }
     return _config

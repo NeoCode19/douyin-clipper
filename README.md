@@ -41,7 +41,7 @@ scripts\register_protocol.bat   :: 注册 dyclip:// 协议(一次性)
 
 1. 在 douyin.com 打开一个视频(单视频页或首页推荐流都可以——提取器会锚定当前正在播放的那条)
 2. 点扩展图标;助手未在线时点弹窗里的绿色「一键启动本机助手」(首次会请求允许打开 `dyclip://` 链接,勾选始终允许即可)
-3. 点「剪藏此视频到 Obsidian」→ 约 30 秒后笔记自动写入配置目录,文件名即视频标题
+3. 点「剪藏此视频到 Obsidian」→ 约 30 秒后笔记自动写入配置目录并在 Obsidian 中打开,文件名即视频标题
 
 命令行模式(可选):
 
@@ -63,6 +63,7 @@ python tools\post_clip.py                    :: 把抓包 JSON 直接提交给�
 | `assets_dir` | 视频归档子目录 | `附件/抖音` |
 | `model_size` | whisper 模型:`tiny/base/small/medium`,越大越准越慢 | `small` |
 | `max_video_sec` | 视频时长上限(秒),防误点超长视频 | `1200` |
+| `open_note` | 剪完后自动在 Obsidian 打开新笔记 | `true` |
 | `token` | 本地鉴权串,需与扩展弹窗里粘贴的一致 | 任意随机字符串 |
 | `downloads_dir` | 中间产物临时目录(相对项目根) | `downloads` |
 
@@ -98,6 +99,7 @@ tags:
 ## 性能与已知限制
 
 - 参考:**5 分钟视频全链路约 30 秒**(Ryzen 7 8845H,CPU int8)。速度大头是听写;`small` 是免费路线的甜点位,追求准确率可换 `medium`(慢约一倍),精度要求高且有 N 卡可自行换 CUDA 版 faster-whisper
+- 同一视频重复剪藏会复用 `downloads/<id>.transcript.json` 转写缓存,免二次听写、秒级完成;更换 `model_size` 后缓存自动作废、重新听写
 - 不支持点击时间戳跳回原片(抖音 URL 无定位参数);文稿为段落流,面向阅读和后续 AI 消化而非逐句对照
 - 仅 Windows(协议注册脚本按 Win 写),Mac/Linux 思路相同但启动方式不同
 - 平台改版可能使 fiber 树结构漂移——提取器有多级兜底,但若全面失效欢迎提 issue

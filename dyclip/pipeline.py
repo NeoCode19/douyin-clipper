@@ -8,8 +8,13 @@
 from __future__ import annotations
 
 import functools
+import json
+import os
+import shutil
 import sys
 import threading
+import time
+from pathlib import Path
 
 from . import config, parse, render
 
@@ -45,6 +50,39 @@ def transcribe(audio_path, model_size: str, language: str = "zh"):
     for seg in segments_iter:
         transcript.append({"start": seg.start, "end": seg.end, "text": seg.text})
     return transcript, info
+
+
+def _load_transcript_cache(cache_path, model_size: str):
+    """命中转写缓存则返回段列表;未命中、损坏或模型不符返回 None。
+
+    兼容两种格式:旧版为纯段列表,新版为 {"model": ..., "segments": [...]}。
+    """
+    try:
+        data = json.loads(Path(cache_path).read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if isinstance(data, list):
+        return data or None
+    if isinstance(data, dict) and data.get("model") == model_size:
+        return data.get("segments") or None
+    return None
+
+
+def obsidian_open_uri(cfg, note_path) -> str:
+    """obsidian:// URI:vault 名取仓库目录名,file 为仓库内相对路径"""
+    from urllib.parse import quote
+    vault = quote(Path(cfg["vault_path"]).name, safe="")
+    rel = Path(note_path).relative_to(cfg["vault_path"]).as_posix()
+    return f"obsidian://open?vault={vault}&file={quote(rel, safe='/')}"
+
+
+def open_note_in_obsidian(cfg, note_path) -> None:
+    """剪完自动在 Obsidian 打开笔记;失败只提示,不影响剪藏结果"""
+    try:
+        os.startfile(obsidian_open_uri(cfg, note_path))
+        print("      已在 Obsidian 打开笔记。")
+    except Exception as e:
+        print(f"      自动打开 Obsidian 失败(笔记已正常写入):{e}")
 
 
 def load_item_from_json(json_path):
@@ -92,7 +130,6 @@ def main(argv: list[str]) -> None:
     cfg = config.load()
 
     proxies = None
-    import os
     if os.environ.get("DYCLIP_PROXY"):
         proxies = {"http": os.environ["DYCLIP_PROXY"],
                    "https": os.environ["DYCLIP_PROXY"]}
@@ -104,9 +141,6 @@ def main(argv: list[str]) -> None:
 
 
 def _run(cfg, item) -> None:
-    import os
-    import time
-    from pathlib import Path
     t0 = time.monotonic()
 
     max_sec = int(cfg.get("max_video_sec", 600))
@@ -151,25 +185,30 @@ def _run(cfg, item) -> None:
     if warmer is not None:
         warmer.join()
 
-    try:
-        transcript, info = transcribe(video_path, cfg["model_size"])
-    except Exception:
-        if video_path.exists() and video_path.stat().st_size < 10_000:
-            video_path.unlink(missing_ok=True)
-        raise
-
-    if not transcript:
-        raise SystemExit("转写结果为空:视频可能没有人声(纯音乐/BGM?)。")
-    print(f"      转写完成:{len(transcript)} 段,"
-          f"检测语言={info.language}(置信度 {info.language_probability:.0%})")
-
-    import json
     cache_path = cfg["downloads_dir"] / f"{item['aweme_id']}.transcript.json"
-    cache_path.write_text(json.dumps(transcript, ensure_ascii=False), encoding="utf-8")
+    info = None
+    transcript = _load_transcript_cache(cache_path, cfg["model_size"])
+    if transcript:
+        print(f"[3/4] 复用已有转写缓存:{cache_path.name}"
+              f"({len(transcript)} 段,免听写)")
+    else:
+        try:
+            transcript, info = transcribe(video_path, cfg["model_size"])
+        except Exception:
+            if video_path.exists() and video_path.stat().st_size < 10_000:
+                video_path.unlink(missing_ok=True)
+            raise
+        if not transcript:
+            raise SystemExit("转写结果为空:视频可能没有人声(纯音乐/BGM?)。")
+        print(f"      转写完成:{len(transcript)} 段,"
+              f"检测语言={info.language}(置信度 {info.language_probability:.0%})")
+        cache_path.write_text(
+            json.dumps({"model": cfg["model_size"], "segments": transcript},
+                       ensure_ascii=False),
+            encoding="utf-8")
 
     stem = render.note_stem(item["title"], item["aweme_id"])
 
-    import shutil
     assets_dir = cfg["vault_path"] / cfg["assets_dir"]
     assets_dir.mkdir(parents=True, exist_ok=True)
     target = assets_dir / f"{stem}.mp4"
@@ -185,6 +224,8 @@ def _run(cfg, item) -> None:
     out_path.write_text(md, encoding="utf-8")
 
     print(f"[4/4] 笔记已写入:{out_path}")
+    if cfg.get("open_note", True):
+        open_note_in_obsidian(cfg, out_path)
     words = sum(len(s["text"]) for s in transcript)
     elapsed = time.monotonic() - t0
     print(f"      文稿约 {words} 字 · 视频已归档 {size_mb:.1f} MB"

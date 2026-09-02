@@ -15,5 +15,8 @@ model_size = "small"
 # 视频时长上限(秒),防止误点超长视频烧时间
 max_video_sec = 600
 
+# 剪完后自动在 Obsidian 打开新笔记
+open_note = true
+
 # 视频/音频临时目录(相对本项目根目录)
 downloads_dir = "downloads"

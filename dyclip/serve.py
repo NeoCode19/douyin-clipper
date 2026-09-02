@@ -74,7 +74,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/ping":
-            self._reply(200, {"ok": True, "service": "douyin-clipper", "version": "0.1.0"})
+            self._reply(200, {"ok": True, "service": "douyin-clipper", "version": "0.2.0"})
         else:
             self._reply(404, {"ok": False})
 
